@@ -8,6 +8,8 @@
     ]
   },
   "t_colors": {
-    "HappyIdle.bmp": [255, 0, 255]
+    "HappyIdle.bmp": [255, 0, 255],
+    "SadIdle.bmp": [255, 0, 255],
+    "NeutralIdle.bmp": [255, 0, 255]
   }
 }
