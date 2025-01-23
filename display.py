@@ -66,17 +66,149 @@ for i in range(intro_sheet.width // tile_width):
     display.refresh()
     time.sleep(timings["intro"][i % len(timings["intro"])])
 
+splash.remove(intro_animation)
+splash.append(open_background)
+splash.append(
 
-state = ["idle", "happy"]
-frame = 0
-max_frame = happpy_idle_sheet.width // tile_width
-#Main Loop
+
+class Pet:
+	def __init__(self, idles, splash, name="Pet"):
+		self.idles = idles
+		self.resetAnim()
+		self.splash = splash
+		self.ko_anim self.ko_anim = ko_anim
+		self.name = pet
+		self.frame = 0
+		self.happiness = 50
+		self.hunger = 50
+		self.exercise = 50
+		self.oneTime = False
+		self.time_dif = 0.1
+        
+	def setAnim(self, anim, animName, sheet, oneTime):
+		splash.remove(self.anim)
+		splash.append(anim)
+		self.anim = anim
+		self.animName = animName
+		self.sheet = sheet
+		self.oneTime = oneTime
+        
+	def get(self, query):
+		rets = []
+		for item in query.lower().split():
+			match item:
+				case "anim":
+					rets.append(self.anim)
+				case "sheet":
+					rets.append(self.sheet)
+				case "splash":
+					rets.append(self.splash)
+				case "frame":
+					rets.append(self.frame)
+				case "happiness":
+					rets.append(self.happiness)
+				case "hunger":
+					rets.append(self.hunger)
+				case "exercise":
+					rets.append(self.exercise)
+				case "onetime":
+					rets.append(self.oneTime)
+				case "animname":
+					rets.append(self.animName)
+				case "name":
+					rets.append(self.name)
+				case "idles":
+					rets.append(self.idles)
+				case "state":
+					rets.append(self.state)
+		return rets
+        
+	def runFrame(self, time):
+		time += self.time_dif
+		time_set = timings[self.animName]
+		if time == time_set[frame % len(time_set)]:
+			self.frame += 1
+			if frame == self.sheet.width // tile_width:
+				if oneTime:
+					self.resetAnim()
+				else:
+					frame = 0
+			time = 0
+		self.happiness -= 0.05
+		self.hunger -= 0.05
+		self.exercise -= 0.05
+		if self.happiness < 0:
+			self.happiness = 0
+		if self.hunger < 0:
+			self.hunger = 0
+		if self.exercise < 0:
+			self.exercise = 0
+		return self.time_dif, time
+        
+	def resetAnim(self):
+		if self.happiness < 30 or self.hunger < 30 or self.exercise < 30:
+			self.state = "sad"
+		elif self.happiness < 70 or self.hunger < 70 or self.exercise < 70:
+			self.state = "neutral"
+		else:
+			self.state = "happy"
+		self.anim, self.sheet, self.animName = *self.idles[self.state]
+        
+	def move(self, x, y):
+		self.anim.x += x
+		self.anim.y += y
+		
+			
+
+settings = {"backyard": backyard_scene, "inside": inside_scene, "fridge": kitchen_scene}
+setting = 1
+anims = {"eating": eating_sheet, "petting": petting_sheet, "game": game_sheet}
+busy = False
+total_time = 0
+time = 0
+game = None
+pet = Pet(neutral_idle_animation, neutral_idle_sheet, splash)
+
 while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-    happpy_idle_animation[0] = frame
-    display.refresh()
-    time.sleep(timings[state[1] + "_" + state[0]][i % len(timings[state[1] + "_" + state[0]])])
-    frame = (frame + 1) % max_frame
+	action = False
+	left = False
+	right = False
+	if right_pressed and setting < 2:
+		if not busy:
+			setting += 1
+			splash.remove(pet.get("anim")[0])
+			splash.remove(setting[settings.keys()[setting - 1]])
+			splash.append(setting[settings.keys()[setting]])
+			splash.append(pet.get("anim")[0])
+		else:
+			left = True
+	elif left_pressed and setting > 0:
+		if not busy:
+			setting -= 1
+			splash.remove(pet.get("anim")[0])
+			splash.remove(setting[settings.keys()[setting + 1]])
+			splash.append(setting[settings.keys()[setting]])
+			splash.append(pet.get("anim")[0])
+	elif up_pressed:
+		action = True
+	match setting:
+		case 0:
+			if action:
+				if not busy:
+					busy = True
+					game = Game(pet)
+				else:
+					game.jump()
+			if busy:
+				game.run()
+		case 1:
+			if not busy and action
+				busy = True
+				start_petting(pet)
+		case 2:
+			if not busy and action:
+				busy = True
+				start_eating(pet)
+	time_dif, time = pet.runFrame(time)
+	total_time += time_dif
+	time.sleep(time_dif)
