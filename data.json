@@ -1,0 +1,13 @@
+{
+  "timings": {
+    "intro": [
+      0.3
+    ],
+    "happy_idle": [
+      0.4
+    ]
+  },
+  "t_colors": {
+    "HappyIdle.bmp": [255, 0, 255]
+  }
+}
