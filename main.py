@@ -4,6 +4,8 @@ import pygame
 import time
 import json
 import misc
+from pet import Pet
+from game import Game
 
 misc.convertAll()
 
@@ -98,98 +100,6 @@ for i in range(intro_sheet.width // tile_width):
 
 splash.remove(intro_animation)
 splash.append(open_background)
-
-class Pet:
-	def __init__(self, idles, splash, name="Pet"):
-		self.idles = idles
-		self.resetAnim()
-		self.splash = splash
-		self.name = name
-		self.frame = 0
-		self.happiness = 50
-		self.hunger = 50
-		self.exercise = 50
-		self.oneTime = False
-		self.time_dif = 0.1
-        
-	def setAnim(self, anim, animName, sheet, oneTime):
-		splash.remove(self.anim)
-		splash.append(anim)
-		self.anim = anim
-		self.animName = animName
-		self.sheet = sheet
-		self.oneTime = oneTime
-        
-	def get(self, query):
-		rets = []
-		for item in query.lower().split():
-			match item:
-				case "anim":
-					rets.append(self.anim)
-				case "sheet":
-					rets.append(self.sheet)
-				case "splash":
-					rets.append(self.splash)
-				case "frame":
-					rets.append(self.frame)
-				case "happiness":
-					rets.append(self.happiness)
-				case "hunger":
-					rets.append(self.hunger)
-				case "exercise":
-					rets.append(self.exercise)
-				case "onetime":
-					rets.append(self.oneTime)
-				case "animname":
-					rets.append(self.animName)
-				case "name":
-					rets.append(self.name)
-				case "idles":
-					rets.append(self.idles)
-				case "state":
-					rets.append(self.state)
-		return rets
-        
-	def runFrame(self, time):
-		time += self.time_dif
-		time_set = timings[self.animName]
-		if time == time_set[frame % len(time_set)]:
-			self.frame += 1
-			if frame == self.sheet.width // tile_width:
-				if self.oneTime:
-					self.resetAnim()
-				else:
-					frame = 0
-			time = 0
-		self.happiness -= 0.05
-		self.hunger -= 0.05
-		self.exercise -= 0.05
-		if self.happiness < 0:
-			self.happiness = 0
-		if self.hunger < 0:
-			self.hunger = 0
-		if self.exercise < 0:
-			self.exercise = 0
-		return self.time_dif, time
-        
-	def resetAnim(self):
-		if self.happiness < 30 or self.hunger < 30 or self.exercise < 30:
-			self.state = "sad"
-		elif self.happiness < 70 or self.hunger < 70 or self.exercise < 70:
-			self.state = "neutral"
-		else:
-			self.state = "happy"
-		splash.remove(self.anim)
-		self.anim, self.sheet, self.animName = self.idles[self.state]
-		splash.append(self.anim)
-        
-	def move(self, x, y):
-		self.anim.x += x
-		self.anim.y += y	
-
-	def moveTo(self, x, y):
-		self.anim.x = x
-		self.anim.y = y
 
 settings = {"backyard": open_background, "inside": open_background, "fridge": open_background}
 setting = 1
