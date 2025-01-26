@@ -6,7 +6,11 @@ timings = json.loads(os.environ["TIMINGS"])
 class Pet:
 	def __init__(self, idles, splash, speed, name="Pet"):
 		self.idles = idles
-		self.resetAnim()
+		self.state = "neutral"
+		self.anim = None
+		self.anim_name = None
+		self.sheet = None
+		self.reset_anim()
 		self.splash = splash
 		self.name = name
 		self.frame = 0
@@ -16,33 +20,37 @@ class Pet:
 		self.oneTime = False
 		self.time_dif = 0.1
 		self.speed = speed
-		self.powerUps = {}
+		self.power_ups = []
 		self.health = 0
         
-	def setAnim(self, anim, sheet, animName, oneTime=False):
+	def set_anim(self, anim, sheet, anim_name, one_time=False):
 		self.splash.remove(self.anim)
 		self.splash.append(anim)
 		self.anim = anim
-		self.animName = animName
+		self.anim_name = anim_name
 		self.sheet = sheet
-		self.oneTime = oneTime
+		self.oneTime = one_time
 	
-	def addPowerup(self, powerUp, duration):
-		self.powerUps[powerUp] = duration
-		powerUp.start()
+	def add_powerup(self, power_up, duration):
+		self.power_ups.append([power_up])
+		power_up.start()
+
+	def rem_powerup(self, power_up):
+		self.power_ups.remove(power_up)
+		power_up.stop()
 	
-	def clearPowerups(self):
-		for powerUp in self.powerUps:
-			powerUp.end()
+	def clear_powerups(self):
+		for power_up in self.power_ups:
+			self.rem_powerup(power_up)
         
-	def runFrame(self, time):
+	def run_frame(self, time):
 		time += self.time_dif
-		time_set = timings[self.animName]
-		if time >= time_set[frame % len(time_set)]:
+		time_set = timings[self.anim_name]
+		if time >= time_set[self.frame % len(time_set)]:
 			self.frame += 1
-			if frame == self.sheet.width // self.anim.tile_width:
+			if self.frame == self.sheet.width // self.anim.tile_width:
 				if self.oneTime:
-					self.resetAnim()
+					self.reset_anim()
 				else:
 					frame = 0
 			time = 0
@@ -55,9 +63,11 @@ class Pet:
 			self.hunger = 0
 		if self.exercise < 0:
 			self.exercise = 0
+		for power_up in self.power_ups:
+			power_up.run(self.time_dif)
 		return self.time_dif, time
         
-	def resetAnim(self):
+	def reset_anim(self):
 		if self.happiness < 30 or self.hunger < 30 or self.exercise < 30:
 			self.state = "sad"
 		elif self.happiness < 70 or self.hunger < 70 or self.exercise < 70:
@@ -65,13 +75,13 @@ class Pet:
 		else:
 			self.state = "happy"
 		self.splash.remove(self.anim)
-		self.anim, self.sheet, self.animName = self.idles[self.state]
+		self.anim, self.sheet, self.anim_name = self.idles[self.state]
 		self.splash.append(self.anim)
         
 	def move(self, x, y):
 		self.anim.x += x
 		self.anim.y += y
 
-	def moveTo(self, x, y):
+	def move_to(self, x, y):
 		self.anim.x = x
 		self.anim.y = y

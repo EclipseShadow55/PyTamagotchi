@@ -13,13 +13,13 @@ class Obj:
 		self.time = 0
 		self.frame = 0
 	
-	def resetAnim(self):
+	def reset_anim(self):
 		self.anim[0] = 0
         
-	def runFrame(self, time_dif):
+	def run_frame(self, time_dif):
 		self.time += time_dif
 		if self.time >= timings:
-			frame = (frame + 1) % (self.sheet.width // self.anim.tile_width)
+			frame = (self.frame + 1) % (self.sheet.width // self.anim.tile_width)
 			self.time = 0
 			self.anim[0] = frame
 	
@@ -27,9 +27,13 @@ class Obj:
 		self.anim.x += x
 		self.anim.y += y
 	
-	def moveTo(self, x, y):
+	def move_to(self, x, y):
 		self.anim.x = x
 		self.anim.y = y
 	
-	def onColide(self, pet, game):
-		pass
+	def on_collide(self, pet, game):
+		game.splash.remove(self.anim)
+		game.objects.remove(self)
+
+	def update_speed(self, value):
+		self.speed = value
