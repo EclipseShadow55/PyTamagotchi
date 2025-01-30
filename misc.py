@@ -1,40 +1,69 @@
 from PIL import Image
 import os
+import json
+
+common_t_colors = [(255, 0, 255), (0, 255, 255), (255, 255, 0), (0, 0, 255), (255, 0, 0), (0, 255, 0)]
+
+def get_t_color(colors):
+    for i in range(len(common_t_colors)):
+        if common_t_colors[i] not in colors:
+            t_color_sub = common_t_colors[i]
+            return t_color_sub, colors
+    return None
 
 def convert(input_path, output_path):
     try:
+        t_needed = False
+        t_color_sub = None
         image = Image.open(input_path).convert("RGBA")
-        image.save(output_path, format="BMP", bitmap_format="BMP;32")
+        colors = [c[1] for c in image.convert("RGB").getcolors()]
         data = image.getdata()
         new_data = []
         for item in data:
             if item[3] == 0:
-                new_data.append((255, 0, 255,))
+                if not t_needed:
+                    t_needed = True
+                    t_color_sub, colors = get_t_color(colors)
+                new_data.append(t_color_sub)
             else:
                 new_data.append(item)
         image.putdata(new_data)
         image.convert("RGB")
         image.save(output_path, format="BMP")
-        return "Operation Successful"
+        print(f"Operation Complete: Transparency {t_needed}")
+        return {"Finished": True, "Colors": colors, "Transparency?": t_needed, "Transparency Color": t_color_sub}
     except Exception as e:
-        return f"Operation Failed: {e}"
+        print(f"Operation Failed")
+        return {"Finished": False, "Error": e}
 
-def convertAll():
+def convert_all():
     try:
-        pngs = os.listdir("PNGs")
-        for i in range(len(pngs)):
-            if not pngs[i].endswith(".png"):
-                pngs.pop(i)
-            else:
-                pngs[i] = pngs[i][:-4]
-        clear_directory("BMPs")
+        rets = {}
+        data = None
+        with open("data.json", "r") as f:
+            data = json.load(f)
+            data["colors"] = {}
+        pet = os.listdir("Pet")
+        extra = os.listdir("Extras")
+        backs = os.listdir("Backdrops")
+        pngs = [f"Pet/{file[:-4]}" for file in pet if file.endswith(".png")] + [f"Extras/{file[:-4]}" for file in extra if file.endswith(".png")] + [f"Backdrops/{file[:-4]}" for file in backs if file.endswith(".png")]
+        bmps = [f"Pet/{file}" for file in pet if file.endswith(".bmp")] + [f"Extras/{file}" for file in extra if file.endswith(".bmp")] + [f"Backdrops/{file}" for file in backs if file.endswith(".bmp")]
+        for file in bmps:
+            os.remove(file)
         for item in pngs:
-            ret = convert(f"PNGs/{item}.png", f"BMPs/{item}.bmp")
-            if ret != "Operation Successful":
-                return ret
-        return "Operation Successful"
+            data["colors"][item] = {}
+            ret = convert(f"{item}.png", f"{item}.bmp")
+            if ret[2]:
+                data["colors"][item]["colors"] = ret["Colors"]
+                data["colors"][item]["t_color"] = ret["Transparency Color"]
+            rets[item] = ret
+        print("Operation Complete")
+        with open("data.json", "w") as f:
+            json.dump(obj=data, fp=f, indent=2)
+        return rets
     except Exception as e:
-        return f"Operation Failed: {e}"
+        print(f"Operation Failed")
+        return [False, e]
 
 def clear_directory(directory_path):
     for file in os.listdir(directory_path):
@@ -47,7 +76,6 @@ def show (input_path, output_path):
         image = Image.open(input_path)
         width, height = image.size
         pixels = list(image.getdata())
-
         with open(output_path, 'w') as file:
             file.write(f"Width: {width}\n")
             file.write(f"Height: {height}\n")
@@ -66,9 +94,11 @@ if __name__ == "__main__":
         inp = inp.split(" ")
         if inp[0] == "convert":
             if len(inp) < 3:
-                print(convertAll())
+                ret = convert_all()
             else:
-                print(convert(inp[1], inp[2]))
+                ret = convert(inp[1], inp[2])
+            if input("Show results? (y/n) ") == "y":
+                print(ret)
         elif inp[0] == "show":
             print(show(inp[1], inp[2]))
         inp = input(">>> ")

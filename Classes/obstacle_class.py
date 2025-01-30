@@ -6,3 +6,5 @@ class Obstacle(Obj):
 
     def on_collide(self, pet, game):
         pet.health -= 1
+        super().on_collide(pet, game)
+        del self

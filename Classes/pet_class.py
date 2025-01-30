@@ -10,7 +10,6 @@ class Pet:
 		self.anim = None
 		self.anim_name = None
 		self.sheet = None
-		self.reset_anim()
 		self.splash = splash
 		self.name = name
 		self.frame = 0
@@ -22,6 +21,14 @@ class Pet:
 		self.speed = speed
 		self.power_ups = []
 		self.health = 0
+		if self.happiness < 30 or self.hunger < 30 or self.exercise < 30:
+			self.state = "sad"
+		elif self.happiness < 70 or self.hunger < 70 or self.exercise < 70:
+			self.state = "neutral"
+		else:
+			self.state = "happy"
+		self.anim, self.sheet, self.anim_name = self.idles[self.state]
+		self.splash.append(self.anim)
         
 	def set_anim(self, anim, sheet, anim_name, one_time=False):
 		self.splash.remove(self.anim)
@@ -45,7 +52,7 @@ class Pet:
         
 	def run_frame(self, time):
 		time += self.time_dif
-		time_set = timings[self.anim_name]
+		time_set = timings.get(self.anim_name, [0.3])
 		if time >= time_set[self.frame % len(time_set)]:
 			self.frame += 1
 			if self.frame == self.sheet.width // self.anim.tile_width:

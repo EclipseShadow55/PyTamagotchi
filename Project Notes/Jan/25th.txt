@@ -1,0 +1,6 @@
+Minor bug fixes in main, may have created more issues
+Adjusted pet_class phrasing for compatability
+Created health and speed powerups
+Finished powerup_class, obj_class.py
+Committed
+Pushed to WorkingDirectory

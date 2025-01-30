@@ -2,8 +2,8 @@ from ..powerup_class import Powerup
 from random import randint
 
 class SpeedPowerup(Powerup):
-    def __init__(self, anim, sheet, anim_name, speed):
-        super().__init__(anim, sheet, anim_name, speed, "Speed Buff")
+    def __init__(self, anim, sheet, anim_name):
+        super().__init__(anim, sheet, anim_name, "Speed Buff")
         self.value = randint(2, 4)
 
     def start(self):

@@ -4,12 +4,11 @@ import json
 timings = json.loads(os.environ["TIMINGS"])
 
 class Obj:
-	def __init__(self, anim, sheet, anim_name, type, speed):
+	def __init__(self, anim, sheet, anim_name, type):
 		self.anim = anim
 		self.sheet = sheet
 		self.anim_name = anim_name
 		self.type = type
-		self.speed = speed
 		self.time = 0
 		self.frame = 0
 	

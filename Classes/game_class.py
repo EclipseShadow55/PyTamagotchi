@@ -2,7 +2,6 @@ import os
 import json
 import random
 
-base_obj_speed = json.loads(os.environ["BASE_OBJ_SPEED"])
 timings = json.loads(os.environ["TIMINGS"])
 screen_width = json.loads(os.environ["SCREEN_WIDTH"])
 
@@ -20,6 +19,7 @@ class Game:
 		pet.set_anim(playing_animation, playing_sheet, "playing")
 	
 	def run(self, time_dif, left, right):
+		base_obj_speed = json.loads(os.environ["BASE_OBJ_SPEED"])
 		self.time += time_dif
 		self.frame += 1
 		self.frame %= self.game_sheet.width // screen_width
@@ -35,6 +35,5 @@ class Game:
 					or obj.anim.x + obj.main.tile_width <= self.pet.anim.x
 					or obj.anim.x >= self.pet.anim.x + self.pet.anim.tile_width):
 				obj.on_collide(self.pet, self)
-		for obj in self.objects:
-			obj.anim.y -= obj.speed
+			obj.anim.y -= base_obj_speed * self.time // 20
 			obj.run_frame(time_dif)

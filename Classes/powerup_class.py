@@ -3,8 +3,8 @@ from random import randint
 
 
 class Powerup(Obj):
-    def __init__(self, anim, sheet, anim_name, speed, name):
-        super().__init__(anim, sheet, anim_name, "Powerup", speed)
+    def __init__(self, anim, sheet, anim_name, name):
+        super().__init__(anim, sheet, anim_name, "Powerup")
         self.name = name
         self.pet = None
         self.duration = randint(15, 20)
