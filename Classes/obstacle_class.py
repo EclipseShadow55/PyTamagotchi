@@ -1,5 +1,7 @@
 from obj_class import Obj
 
+#FUTURE PLAN, NOT FULLY IMPLEMENTED AND NOT USED
+
 class Obstacle(Obj):
     def __init__(self, anim, sheet, anim_name, speed):
         super().__init__(anim, sheet, anim_name, "Obstacle", speed)

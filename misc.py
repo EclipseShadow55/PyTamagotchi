@@ -1,6 +1,8 @@
 from PIL import Image
 import os
 import json
+import collections
+import displayio
 
 common_t_colors = [(255, 0, 255), (0, 255, 255), (255, 255, 0), (0, 0, 255), (255, 0, 0), (0, 255, 0)]
 
@@ -11,12 +13,21 @@ def get_t_color(colors):
             return t_color_sub, colors
     return None
 
+def get_colors(image):
+    colors = collections.OrderedDict()
+    for color in image.getdata():
+        if color not in colors:
+            colors[color] = 1
+        else:
+            colors[color] += 1
+    return [item[0] for item in sorted([[color, colors[color]] for color in colors], key=lambda x: x[1])]
+
 def convert(input_path, output_path):
     try:
         t_needed = False
         t_color_sub = None
         image = Image.open(input_path).convert("RGBA")
-        colors = [c[1] for c in image.convert("RGB").getcolors()]
+        colors = get_colors(image.convert("RGB"))
         data = image.getdata()
         new_data = []
         for item in data:
@@ -30,7 +41,7 @@ def convert(input_path, output_path):
         image.putdata(new_data)
         image.convert("RGB")
         image.save(output_path, format="BMP")
-        print(f"Operation Complete: Transparency {t_needed}")
+        print(f"Operation Complete | Transparency {t_needed} | {input_path} -> {output_path}")
         return {"Finished": True, "Colors": colors, "Transparency?": t_needed, "Transparency Color": t_color_sub}
     except Exception as e:
         print(f"Operation Failed")
@@ -53,11 +64,12 @@ def convert_all():
         for item in pngs:
             data["colors"][item] = {}
             ret = convert(f"{item}.png", f"{item}.bmp")
-            if ret[2]:
-                data["colors"][item]["colors"] = ret["Colors"]
-                data["colors"][item]["t_color"] = ret["Transparency Color"]
+            if ret["Finished"]:
+                if ret["Transparency?"]:
+                    data["colors"][item]["colors"] = ret["Colors"]
+                    data["colors"][item]["t_color"] = ret["Transparency Color"]
             rets[item] = ret
-        print("Operation Complete")
+        print("All Files Converted")
         with open("data.json", "w") as f:
             json.dump(obj=data, fp=f, indent=2)
         return rets
@@ -71,7 +83,7 @@ def clear_directory(directory_path):
         os.remove(file_path)
     print("Directory cleared successfully.")
 
-def show (input_path, output_path):
+def show(input_path, output_path):
     try:
         image = Image.open(input_path)
         width, height = image.size
@@ -88,6 +100,17 @@ def show (input_path, output_path):
     except Exception as e:
         return f"Operation Failed: {e}"
 
+def showbmp(input_path, output_path):
+    bmp = displayio.OnDiskBitmap(input_path)
+    with open(output_path, 'w') as file:
+        file.write(f"Width: {bmp.width}\n")
+        file.write(f"Height: {bmp.height}\n")
+        file.write("Pixels:\n")
+        for y in range(bmp.height):
+            for x in range(bmp.width):
+                file.write(f"{bmp[x, y]} ")
+            file.write("\n")
+
 if __name__ == "__main__":
     inp = input(">>> ")
     while inp != "exit":
@@ -101,4 +124,6 @@ if __name__ == "__main__":
                 print(ret)
         elif inp[0] == "show":
             print(show(inp[1], inp[2]))
+        elif inp[0] == "showbmp":
+            showbmp(inp[1], inp[2])
         inp = input(">>> ")

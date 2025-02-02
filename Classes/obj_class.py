@@ -1,6 +1,8 @@
 import os
 import json
 
+#FUTURE PLAN, NOT FULLY IMPLEMENTED AND NOT USED
+
 timings = json.loads(os.environ["TIMINGS"])
 
 class Obj:

@@ -5,44 +5,93 @@ with open("data.json", "r") as f:
     data = json.load(f)
     timings = data.get("timings", None)
     colors = data.get("colors", None)
-    name = data.get("name", None)
+    print(colors)
 files = os.listdir("Pet") + os.listdir("Extras") + os.listdir("Backdrops")
 pngs = [file for file in files if file.endswith(".png")]
 bmps = [file for file in files if file.endswith(".bmp")]
-if pngs.sort() != bmps.sort() or None in [name, timings, colors]:
+if pngs.sort() != bmps.sort() or None in [timings, colors]:
     print("Please run setup.py before you run this one. This program will not work without the necessary setup. Also run setup.py if you have changed any sprites in the Extras folder")
 
 screen_width = 128
 base_obj_speed = 50
 pet_speed = 10
+base_happy_increase = 20
+base_hunger_increase = 20
+base_exercise_increase = 20
 
 os.environ["TIMINGS"] = json.dumps(timings)
 os.environ["SCREEN_WIDTH"] = json.dumps(screen_width)
 os.environ["BASE_OBJ_SPEED"] = json.dumps(base_obj_speed)
+os.environ["BASE_HAPPY_INCREASE"] = json.dumps(base_happy_increase)
+os.environ["BASE_HUNGER_INCREASE"] = json.dumps(base_hunger_increase)
+os.environ["BASE_EXERCISE_INCREASE"] = json.dumps(base_exercise_increase)
 
 import displayio
 from blinka_displayio_pygamedisplay import PyGameDisplay
 import time
 from Classes.pet_class import Pet
-from Classes.game_class import Game
+#from Classes.game_class import Game
+from misc import convert_all
 import pygame
+from PIL import Image
 
 pygame.init()
+convert_all()
 
-#TO-DO: fix
+def find_place(st, key, plc):
+    last = -1
+    if 0 > plc >= -st.count(key):
+        plc = st.count(key) + plc
+    if 0 <= plc < st.count(key):
+        for _ in range(0, st.count(key)):
+            last = st.find(key, last + 1) + len(key)
+            plc -= 1
+            if plc == -1:
+                break
+    return last
+
+def find_color_index(palette, target_color):
+    target_color = (target_color[0] << 16) | (target_color[1] << 8) | target_color[2]
+    for index in range(len(palette)):
+        print(palette[index])
+        if palette[index] == target_color:
+            return index
+    return -1
+
 def load_bmp(file_path):
-    bmp = displayio.OnDiskBitmap(file_path)
+    img = Image.open(file_path)
+    img = img.convert("RGB")  # Ensure the image is in RGB mode
+    pixels = img.getdata()
+
+    # Extract unique colors and maintain their order
+    unique_colors = []
+    color_to_index = {}
+    for color in pixels:
+        if color not in color_to_index:
+            color_to_index[color] = len(unique_colors)
+            unique_colors.append(color)
+
+    # Create a palette and assign the unique colors
+    palette = displayio.Palette(len(unique_colors))
+    for index, color in enumerate(unique_colors):
+        palette[index] = (color[0] << 16) | (color[1] << 8) | color[2]  # Convert RGB to 24-bit color
+
+    # Create a bitmap and assign the indices
+    bitmap = displayio.Bitmap(img.width, img.height, len(unique_colors))
+    for y in range(img.height):
+        for x in range(img.width):
+            bitmap[x, y] = color_to_index[pixels[y * img.width + x]]
     try:
-        file_colors = colors[file_path[5:-4]]
-        palette = displayio.Palette(len(file_colors["colors"]) + 1)
-        palette[0] = file_colors["t_color"]
-        palette.make_transparent(0)
-        for ind in range(1, len(file_colors["colors"]) + 1):
-            print(f"{ind}: {file_colors['colors'][ind - 1]}")
-            palette[ind] = file_colors["colors"][ind - 1]
+        file_data = colors[file_path[find_place(file_path, "/", -2) + 1:file_path.find(".")]]
+        t_place = find_color_index(palette, file_data["t_color"])
+        if t_place != -1:
+            palette.make_transparent(t_place)
+        else:
+            print(f"{file_path}: Transparency color not found in palette")
     except KeyError as e:
-        palette = None
-    return bmp, palette
+        print(f"{file_path}: {e}")
+
+    return bitmap, palette
 
 display = PyGameDisplay(width=128, height=128)
 splash = displayio.Group()
@@ -53,7 +102,9 @@ happy_idle_sheet, happy_idle_palette = load_bmp("Pet/HappyIdle.bmp")
 open_back_sheet, open_back_palette = load_bmp("Backdrops/OpenBack.bmp")
 neutral_idle_sheet, neutral_idle_palette = load_bmp("Pet/NeutralIdle.bmp")
 sad_idle_sheet, sad_idle_palette = load_bmp("Pet/SadIdle.bmp")
-
+petting_sheet, petting_palette = load_bmp("Pet/Petting.bmp")
+eating_sheet, eating_palette = load_bmp("Pet/Eating.bmp")
+playing_sheet, playing_palette = load_bmp("Pet/Playing (temp).bmp")
 
 intro_animation = displayio.TileGrid(
     bitmap=intro_sheet,
@@ -103,12 +154,47 @@ sad_idle_animation = displayio.TileGrid(
     y=0
 )
 
+petting_animation = displayio.TileGrid(
+    petting_sheet,
+    pixel_shader=petting_palette,
+    width=1,
+    height=1,
+    tile_width=128,
+    tile_height=128,
+    default_tile=0,
+    x=0,
+    y=0
+)
+
+eating_animation = displayio.TileGrid(
+    eating_sheet,
+    pixel_shader=eating_palette,
+    width=1,
+    height=1,
+    tile_width=128,
+    tile_height=128,
+    default_tile=0,
+    x=0,
+    y=0
+)
+
+playing_animation = displayio.TileGrid(
+    playing_sheet,
+    pixel_shader=playing_palette,
+    width=1,
+    height=1,
+    tile_width=128,
+    tile_height=128,
+    default_tile=0,
+    x=0,
+    y=0
+)
+
 open_background = displayio.TileGrid(open_back_sheet, pixel_shader=open_back_palette)
+
 
 splash.append(intro_animation)
 display.refresh()
-for item in splash:
-    print(item)
 for i in range(intro_sheet.width // screen_width):
     print("intro", i)
     intro_animation[0] = i
@@ -122,19 +208,19 @@ display.refresh()
 settings = {"game": [open_background, open_back_sheet], "inside": [open_background, open_back_sheet], "fridge": [open_background, open_back_sheet]}
 setting = 1
 #TO-DO: make eating, petting, and playing animations
-anims = {"eating": [happy_idle_animation, happy_idle_sheet], "petting": [sad_idle_animation, sad_idle_sheet], "playing": [happy_idle_animation, happy_idle_sheet], "ko": [sad_idle_animation, sad_idle_sheet]}
+anims = {"eating": [eating_animation, eating_sheet], "petting": [petting_animation, petting_sheet], "playing": [playing_animation, playing_sheet], "ko": [sad_idle_animation, sad_idle_sheet]}
 busy = False
 total_time = 0
-timer = 0
 game = None
 idles = {"sad": [sad_idle_animation, sad_idle_sheet, "sad_idle"], "neutral": [neutral_idle_animation, neutral_idle_sheet, "neutral_idle"], "happy": [happy_idle_animation, happy_idle_sheet, "happy_idle"]}
-pet = Pet(idles, splash, input("Enter a name for your pet (or enter for default name): "), pet_speed)
+pet = Pet(idles, splash, pet_speed, "Pet")
 
 while True:
     up = False
     left = False
     right = False
-    time_dif, timer = pet.run_frame(timer)
+    time_dif, ended_one_time = pet.run_frame()
+    busy = busy and not ended_one_time
     total_time += time_dif
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -148,16 +234,22 @@ while True:
                     right = True
                 case pygame.K_UP:
                     up = True
+                case pygame.K_DOWN:
+                    pet.exercise -= 30
+                    pet.hunger -= 30
+                    pet.happiness -= 30
 
     if right and setting < 2:
         if not busy:
             setting += 1
+            print("New Setting:", setting)
             splash.remove(pet.anim)
             splash.remove(settings[list(settings.keys())[setting - 1]][0])
             splash.append(settings[list(settings.keys())[setting]][0])
             splash.append(pet.anim)
     elif left and setting > 0:
         if not busy:
+            print("New Setting:", setting)
             setting -= 1
             splash.remove(pet.anim)
             splash.remove(settings[list(settings.keys())[setting + 1]][0])
@@ -168,23 +260,26 @@ while True:
             if up:
                 if not busy:
                     busy = True
-                    #TO-DO: make game_background and ko_animation
-                    game = Game(pet, settings["game"][0], settings["game"][1], anims["playing"][0], anims["playing"][1], anims["ko"][0], anims["ko"][1])
+                    pet.set_anim(anims["playing"][0], anims["playing"][1], "playing", True)
+                    pet.exercise += base_exercise_increase
+                    #TO-DO: make game_background and ko_animation, fully implement game and mechanics
+                    #game = Game(pet, settings["game"][0], settings["game"][1], anims["playing"][0], anims["playing"][1], anims["ko"][0], anims["ko"][1])
             if busy:
-                game.run(time_dif, left, right)
+                pass
+                #game.run(time_dif, left, right)
         case 1:
             if not busy and up:
                 busy = True
-                pet.set_anim(idles["happy"][0], idles["happy"][1], "petting", True)
-                pet.happiness += 20
+                pet.set_anim(anims["petting"][0], anims["petting"][1], "petting", True)
+                pet.happiness += base_happy_increase
             if (not pet.oneTime) and busy:
                 print("busy off")
                 busy = False
         case 2:
             if not busy and up:
                 busy = True
-                pet.set_anim(idles["sad"][0], idles["sad"][1], "feeding", True)
-                pet.hunger += 60
+                pet.set_anim(anims["eating"][0], anims["eating"][1], "eating", True)
+                pet.hunger += base_hunger_increase
             if (not pet.oneTime) and busy:
                 print("busy off")
                 busy = False

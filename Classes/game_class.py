@@ -2,6 +2,8 @@ import os
 import json
 import random
 
+#FUTURE PLAN, NOT FULLY IMPLEMENTED AND NOT USED
+
 timings = json.loads(os.environ["TIMINGS"])
 screen_width = json.loads(os.environ["SCREEN_WIDTH"])
 
