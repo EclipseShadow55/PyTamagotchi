@@ -68,6 +68,7 @@ class Pet:
 					self.reset_anim()
 					ended_one_time = True
 					self.frame = 0
+					self.time = 0
 				else:
 					self.frame = 0
 			self.time = 0
@@ -89,23 +90,9 @@ class Pet:
 		elif self.exercise > 100:
 			self.exercise = 100
 
-		if self.happiness < 70 or self.hunger < 70 or self.exercise < 70:
-			self.state = "neutral"
-		if self.happiness < 30 or self.hunger < 30 or self.exercise < 30:
-			self.state = "sad"
-
 		if self.anim_name in ["happy_idle", "neutral_idle", "sad_idle"]:
 			self.reset_anim()
-
-		for power_up in self.power_ups:
-			power_up.run(self.time_dif)
 		self.anim[0] = self.frame
-		print("Happiness:", self.happiness, "Hunger:", self.hunger, "Exercise:", self.exercise)
-		print("Anim:", self.anim_name)
-		print("Frame:", self.frame)
-		print("Time:", self.time)
-		print("Time Dif:", self.time_dif)
-		print("Max Frames:", self.sheet.width // self.anim.tile_width)
 		return self.time_dif, ended_one_time
         
 	def reset_anim(self):
@@ -117,7 +104,6 @@ class Pet:
 		self.splash.remove(self.anim)
 		self.anim, self.sheet, self.anim_name = self.idles[self.state]
 		self.splash.append(self.anim)
-		self.time = 0
         
 	def move(self, x, y):
 		self.anim.x += x

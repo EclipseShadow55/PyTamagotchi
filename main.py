@@ -53,7 +53,6 @@ def find_place(st, key, plc):
 def find_color_index(palette, target_color):
     target_color = (target_color[0] << 16) | (target_color[1] << 8) | target_color[2]
     for index in range(len(palette)):
-        print(palette[index])
         if palette[index] == target_color:
             return index
     return -1
@@ -106,6 +105,8 @@ petting_sheet, petting_palette = load_bmp("Pet/Petting.bmp")
 eating_sheet, eating_palette = load_bmp("Pet/Eating.bmp")
 playing_sheet, playing_palette = load_bmp("Pet/Playing (temp).bmp")
 
+obj_to_name = {}
+
 intro_animation = displayio.TileGrid(
     bitmap=intro_sheet,
     pixel_shader=intro_palette,
@@ -117,6 +118,8 @@ intro_animation = displayio.TileGrid(
     x=0,
     y=0
 )
+
+obj_to_name[intro_animation] = "intro"
 
 happy_idle_animation = displayio.TileGrid(
     happy_idle_sheet,
@@ -130,6 +133,8 @@ happy_idle_animation = displayio.TileGrid(
     y=0
 )
 
+obj_to_name[happy_idle_animation] = "happy_idle"
+
 neutral_idle_animation = displayio.TileGrid(
     neutral_idle_sheet,
     pixel_shader=neutral_idle_palette,
@@ -142,9 +147,11 @@ neutral_idle_animation = displayio.TileGrid(
     y=0
 )
 
+obj_to_name[neutral_idle_animation] = "neutral_idle"
+
 sad_idle_animation = displayio.TileGrid(
-    neutral_idle_sheet,
-    pixel_shader=neutral_idle_palette,
+    sad_idle_sheet,
+    pixel_shader=sad_idle_palette,
     width=1,
     height=1,
     tile_width=128,
@@ -153,6 +160,8 @@ sad_idle_animation = displayio.TileGrid(
     x=0,
     y=0
 )
+
+obj_to_name[sad_idle_animation] = "sad_idle"
 
 petting_animation = displayio.TileGrid(
     petting_sheet,
@@ -166,6 +175,8 @@ petting_animation = displayio.TileGrid(
     y=0
 )
 
+obj_to_name[petting_animation] = "petting"
+
 eating_animation = displayio.TileGrid(
     eating_sheet,
     pixel_shader=eating_palette,
@@ -177,6 +188,8 @@ eating_animation = displayio.TileGrid(
     x=0,
     y=0
 )
+
+obj_to_name[eating_animation] = "eating"
 
 playing_animation = displayio.TileGrid(
     playing_sheet,
@@ -190,7 +203,11 @@ playing_animation = displayio.TileGrid(
     y=0
 )
 
+obj_to_name[playing_animation] = "playing"
+
 open_background = displayio.TileGrid(open_back_sheet, pixel_shader=open_back_palette)
+
+obj_to_name[open_background] = "open_background"
 
 
 splash.append(intro_animation)
@@ -234,10 +251,6 @@ while True:
                     right = True
                 case pygame.K_UP:
                     up = True
-                case pygame.K_DOWN:
-                    pet.exercise -= 30
-                    pet.hunger -= 30
-                    pet.happiness -= 30
 
     if right and setting < 2:
         if not busy:
@@ -285,3 +298,6 @@ while True:
                 busy = False
     display.refresh()
     time.sleep(time_dif)
+    for item in splash:
+        if item in obj_to_name:
+            print(obj_to_name[item])
