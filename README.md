@@ -5,7 +5,7 @@ Tamagotchi made using CircuitPython (and PyGame for PC display)
 ### With Python (Windows/Linux PC)
 1. Install [Python](https://www.python.org/downloads/)
 2. Download the files from the [Github repository](https://github.com/EclipseShadow55/PyTamagotchi)
-3. CD into the directory where the files are located
+3. Navigate into the directory where the files are located
 4. Run `pip install dependencies.txt` to install dependencies
 5. Run `tamagotchi.py`
 6. Enjoy!
